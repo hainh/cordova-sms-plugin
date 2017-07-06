@@ -14,6 +14,7 @@ import android.provider.Telephony;
 import android.telephony.SmsManager;
 import android.telephony.SubscriptionManager;
 import java.util.ArrayList;
+import java.util.List;
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.PluginResult;
