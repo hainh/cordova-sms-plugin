@@ -13,6 +13,7 @@ import android.os.Build;
 import android.provider.Telephony;
 import android.telephony.SmsManager;
 import android.telephony.SubscriptionManager;
+import android.telephony.SubscriptionInfo;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.cordova.CallbackContext;
