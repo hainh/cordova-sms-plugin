@@ -12,6 +12,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.provider.Telephony;
 import android.telephony.SmsManager;
+import android.telephony.SubscriptionManager;
 import java.util.ArrayList;
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
@@ -138,8 +139,16 @@ public class Sms extends CordovaPlugin {
 		this.cordova.getActivity().startActivity(sendIntent);
 	}
 
+	private int subscriptionInfoIndex = 0;
+
 	private void send(final CallbackContext callbackContext, String phoneNumber, String message) {
-		SmsManager manager = SmsManager.getDefault();
+		Activity ctx = this.cordova.getActivity();
+		SubscriptionManager subscriptionManager = SubscriptionManager.from(ctx);
+		List<SubscriptionInfo> subscriptionInfoList = subscriptionManager.getActiveSubscriptionInfoList();
+		int nextSubscriptionId = subscriptionInfoList.get(subscriptionInfoIndex % subscriptionInfoList.size()).getSubscriptionId();
+		subscriptionInfoIndex++;
+
+		SmsManager manager = SmsManager.getSmsManagerForSubscriptionId(nextSubscriptionId);
 		final ArrayList<String> parts = manager.divideMessage(message);
 
 		// by creating this broadcast receiver we can check whether or not the SMS was sent
