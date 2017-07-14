@@ -67,14 +67,19 @@ public class Sms extends CordovaPlugin {
 		SubscriptionManager subscriptionManager = SubscriptionManager.from(ctx);
 		List<SubscriptionInfo> subscriptionInfoList = subscriptionManager.getActiveSubscriptionInfoList();
 		JSONArray result = new JSONArray();
-		for (int i = 0; i < subscriptionInfoList.size(); i++) {
-			JSONObject elem = new JSONObject();
-			SubscriptionInfo info = subscriptionInfoList.get(i);
-			elem.put("subscriptionId", info.getSubscriptionId());
-			elem.put("mcc", info.getMcc());
-			elem.put("mnc", info.getMnc());
-			elem.put("carrierName", info.getCarrierName());
-			result.put(elem);
+		try {
+			for (int i = 0; i < subscriptionInfoList.size(); i++) {
+				JSONObject elem = new JSONObject();
+				SubscriptionInfo info = subscriptionInfoList.get(i);
+				elem.put("subscriptionId", info.getSubscriptionId());
+				elem.put("mcc", info.getMcc());
+				elem.put("mnc", info.getMnc());
+				elem.put("carrierName", info.getCarrierName());
+				result.put(elem);
+			}
+		} catch (Exception e) {
+			callbackContext.error(e.getMessage());
+			return;
 		}
 		callbackContext.success(result);
 	}
