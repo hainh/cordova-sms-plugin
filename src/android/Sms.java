@@ -19,6 +19,7 @@ import java.util.List;
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.PluginResult;
+import org.json.JSONObject;
 import org.json.JSONArray;
 import org.json.JSONException;
 
@@ -27,6 +28,8 @@ public class Sms extends CordovaPlugin {
 	public final String ACTION_SEND_SMS = "send";
 
 	public final String ACTION_HAS_PERMISSION = "has_permission";
+
+	public final String ACTION_GET_SUBSCRIPTIONS_INFO = "get_subscriptions_info";
 
 	private static final String INTENT_FILTER_SMS_SENT = "SMS_SENT";
 
@@ -52,7 +55,28 @@ public class Sms extends CordovaPlugin {
 			callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, hasPermission()));
 			return true;
 		}
+		else if (action.equals(ACTION_GET_SUBSCRIPTIONS_INFO)) {
+			getSubscriptionsInfo();
+			return true;
+		}
 		return false;
+	}
+
+	private void getSubscriptionsInfo() {
+		Activity ctx = this.cordova.getActivity();
+		SubscriptionManager subscriptionManager = SubscriptionManager.from(ctx);
+		List<SubscriptionInfo> subscriptionInfoList = subscriptionManager.getActiveSubscriptionInfoList();
+		JSONArray result = new JSONArray();
+		for (int i = 0; i < subscriptionInfoList.size(); i++) {
+			JSONObject elem = new JSONObject();
+			SubscriptionInfo info = subscriptionInfoList.get(i);
+			elem.put("subscriptionId", info.getSubscriptionId());
+			elem.put("mcc", info.getMcc());
+			elem.put("mnc", info.getMnc());
+			elem.put("carrierName", info.getCarrierName());
+			result.put(elem);
+		}
+		callbackContext.success(result);
 	}
 
 	private boolean hasPermission() {
@@ -88,6 +112,7 @@ public class Sms extends CordovaPlugin {
 					String message = args.getString(1);
 					String method = args.getString(2);
 					boolean replaceLineBreaks = Boolean.parseBoolean(args.getString(3));
+					int subscriptionId = args.getInt(4);
 
 					// replacing \n by new line if the parameter replaceLineBreaks is set to true
 					if (replaceLineBreaks) {
@@ -102,7 +127,7 @@ public class Sms extends CordovaPlugin {
 						// always passes success back to the app
 						callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK));
 					} else {
-						send(callbackContext, phoneNumber, message);
+						send(callbackContext, phoneNumber, message, subscriptionId);
 					}
 					return;
 				} catch (JSONException ex) {
@@ -143,14 +168,9 @@ public class Sms extends CordovaPlugin {
 
 	private int subscriptionInfoIndex = 0;
 
-	private void send(final CallbackContext callbackContext, String phoneNumber, String message) {
-		Activity ctx = this.cordova.getActivity();
-		SubscriptionManager subscriptionManager = SubscriptionManager.from(ctx);
-		List<SubscriptionInfo> subscriptionInfoList = subscriptionManager.getActiveSubscriptionInfoList();
-		int nextSubscriptionId = subscriptionInfoList.get(subscriptionInfoIndex % subscriptionInfoList.size()).getSubscriptionId();
-		subscriptionInfoIndex++;
+	private void send(final CallbackContext callbackContext, String phoneNumber, String message, int subscriptionId) {
 
-		SmsManager manager = SmsManager.getSmsManagerForSubscriptionId(nextSubscriptionId);
+		SmsManager manager = subscriptionId == -1 ? SmsManager.getDefault() : SmsManager.getSmsManagerForSubscriptionId(subscriptionId);
 		final ArrayList<String> parts = manager.divideMessage(message);
 
 		// by creating this broadcast receiver we can check whether or not the SMS was sent
