@@ -75,6 +75,7 @@ public class Sms extends CordovaPlugin {
 				elem.put("mcc", info.getMcc());
 				elem.put("mnc", info.getMnc());
 				elem.put("carrierName", info.getCarrierName());
+				elem.put("displayName", info.getDisplayName());
 				result.put(elem);
 			}
 		} catch (Exception e) {
